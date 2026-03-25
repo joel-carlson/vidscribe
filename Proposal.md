@@ -48,30 +48,105 @@ All infrastructure is deployed on **Google Cloud Platform (GCP)**.
 
 ## Component Interactions
 
-The service operates as an asynchronous processing pipeline:
+The service operates as a three-phase asynchronous pipeline:
 
-**Submission flow:**
-1. The user submits a YouTube URL or uploads a video file via the Web UI
-2. The REST API validates the input, creates a job record in PostgreSQL (status: pending), and writes any uploaded file to GCS
-3. A lightweight job message (job ID, source type, URL or GCS path) is published to GCP Pub/Sub
-4. The API immediately returns a job ID to the user — processing is asynchronous
+---
 
-**Processing flow:**
-5. A GKE worker pod consumes the job message from Pub/Sub
-6. The worker checks Redis for a cached transcript; if found, skips to step 9
-7. yt-dlp downloads the video and checks for existing YouTube captions (manual captions first, then auto-generated)
-8. If no captions exist, Whisper transcribes the audio and produces a transcript with word-level timestamps
-9. The transcript is sent to the LLM API, which returns section titles, body text, and section-start timestamps
-10. ffmpeg extracts a frame at each section-start timestamp; frames are uploaded to GCS and public image URLs are returned
-11. Article text and image URLs are assembled into final HTML, stored in PostgreSQL, and the job is marked complete
-12. The worker caches the transcript in Redis for retry resilience
+### Phase 1 — Submission
 
-**Response flow:**
-13. The user's status page polls the REST API for job completion
-14. On completion, the user is redirected to the article page
-15. The article HTML is served from PostgreSQL; images are fetched directly from GCS by the browser
+```
+User
+ │  submits URL or file
+ ▼
+Web UI  ──────────────────────────────────────────────────────────
+ │  form POST
+ ▼
+REST API
+ ├── creates job record in PostgreSQL       (status: pending)
+ ├── writes uploaded file to GCS            (if file upload)
+ ├── publishes job message to Pub/Sub
+ └── returns job ID to user immediately     (async — no waiting)
+```
 
-**Storage TTL:** GCS objects and PostgreSQL article records are automatically expired after N days via a GCS lifecycle policy and an `expires_at` field, bounding storage costs.
+---
+
+### Phase 2 — Processing  *(GKE Worker)*
+
+```
+Pub/Sub
+ │  job message consumed
+ ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Redis cache hit?                                               │
+│  YES → skip to LLM Structuring                                  │
+│  NO  → continue below                                          │
+└─────────────────────────────────────────────────────────────────┘
+ │
+ ▼
+yt-dlp — download video, check for existing captions
+ ├── Manual captions found    ──────────────────────┐
+ ├── Auto-generated captions found  ────────────────┤
+ └── No captions → Whisper transcribes audio        │
+                    (word-level timestamps)          │
+                                                     ▼
+                                             Transcript + timestamps
+                                                     │
+                                                     ▼
+                                             LLM API
+                                             returns: section titles
+                                                      body text
+                                                      section timestamps
+                                                     │
+                              ┌──────────────────────┤
+                              │                      │
+                              ▼                      ▼
+                           ffmpeg               Article text
+                    extract frame per           + structure
+                    section timestamp
+                              │
+                              ▼
+                    Blur + stability filter
+                    (±3s window, best frame)
+                              │
+                              ▼
+                    Upload frames → GCS
+                    return public image URLs
+                              │
+                              └──────────────────────┐
+                                                     ▼
+                                             Article Assembly
+                                             merge text + image URLs
+                                             → final HTML
+                                                     │
+                                  ┌──────────────────┤
+                                  │                  │
+                                  ▼                  ▼
+                             PostgreSQL           Redis
+                          store article        cache transcript
+                          mark job complete
+```
+
+---
+
+### Phase 3 — Response
+
+```
+User (polling /status)
+ │
+ ▼
+REST API reads job status from PostgreSQL
+ ├── pending / processing → return progress
+ └── complete → redirect to /article
+                    │
+                    ▼
+             Web UI renders article HTML
+             <img> tags → browser fetches images directly from GCS
+                          (REST API not involved in image serving)
+```
+
+---
+
+> **Storage TTL:** GCS objects are deleted automatically via a bucket lifecycle policy after N days. PostgreSQL article records carry a matching `expires_at` field. The API returns a clean expiry page for any article past its TTL.
 
 ---
 
@@ -90,11 +165,13 @@ The following videos will be used to validate end-to-end correctness:
 | 3 | [Zoom meeting recording] | File upload | None | File upload path + Whisper fallback |
 | 4 | [Poor audio quality video] | YouTube or upload | None | Whisper stress test |
 
-> Fill in specific video titles and URLs before submitting.
+> Specific video URLs will be finalized during development, but the goal is to cover a range of content types, lengths, and caption availability scenarios to ensure robustness across real-world inputs. 
 
 **Definition of success:**
 - *Technical:* 90% of submitted test videos produce a complete article without error
 - *User-facing:* Average user rating of 4/5 or higher across a minimum of 10 user test sessions
+
+I plan on having classmates and colleagues submit videos from the above categories and rate the output on relevance, readability, and overall quality to validate the user-facing success criteria. It is hard to define a strict quantitative metric for article quality, but user ratings will provide a meaningful signal of whether the output is genuinely useful and well-structured.
 
 **LLM evaluation:** Before finalizing LLM selection, candidate models (e.g. Claude, GPT-4o) will be compared on a sample of test videos using defined criteria: section coherence, factual accuracy relative to transcript, and appropriate screenshot placement. Results will be documented in the final report.
 
@@ -102,7 +179,7 @@ The following videos will be used to validate end-to-end correctness:
 
 ## Why This Project Meets the Requirements
 
-This project uses 7 of the 9 required datacenter software components:
+This project uses 7 of the 9 required cloud software components:
 
 1. **RPC / API interfaces** — REST API built with FastAPI
 2. **Message queues** — GCP Pub/Sub decouples submission from processing
@@ -112,7 +189,7 @@ This project uses 7 of the 9 required datacenter software components:
 6. **Containers / functions as a service** — GKE orchestrates all application and worker containers
 7. **Message marshalling / encoding** — JSON serialization between all services
 
-Each component is used because it solves a specific architectural problem — the queue handles async processing, the key-value store avoids redundant transcription, the storage service offloads image serving from the application layer — not simply to satisfy a checklist. The project is a real service with a working end-to-end pipeline and real users, which also satisfies the GenAI course requirements for the Project/Startup Track.
+Each component is used because it solves a specific architectural problem — the queue handles async processing, the key-value store avoids redundant transcription, the storage service offloads image serving from the application layer. The project is a real service with a working end-to-end pipeline and real users, which also satisfies the GenAI course requirements for the Project/Startup Track.
 
 The scope is realistic: the core pipeline (transcription + LLM structuring + article output) can be built and deployed as an MVP without screenshots or a polished UI, with enhancements added incrementally.
 

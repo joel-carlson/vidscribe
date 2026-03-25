@@ -97,6 +97,7 @@ This architecture naturally incorporates the following datacenter components:
 These are explicitly out of scope for the initial build but represent natural next steps:
 
 - **Contextual Q&A**: A chat interface embedded on the article page, backed by a vector database over the transcript, letting users ask questions about the video content directly
+- **Vision model screenshot scoring (Level 2)**: Pass candidate frames alongside section text to a vision model to select the most semantically relevant frame per section — upgrades beyond the blur/stability filter used in v1
 - **Browser extension**: Convert any video you're currently watching with one click
 - **Batch / playlist processing**: Submit an entire YouTube channel or course playlist
 - **LMS integrations**: API connectors for Canvas, Coursera, or similar platforms so instructors can auto-generate notes for their recorded lectures
@@ -106,7 +107,7 @@ These are explicitly out of scope for the initial build but represent natural ne
 
 ## Open Questions (for Proposal Phase)
 
-- Screenshot selection strategy: fixed-interval extraction vs. AI-driven frame relevance scoring
+- ~~Screenshot selection strategy~~ — **resolved**: two-phase approach. Level 1 (v1): extract ±3s window of frames around each section timestamp, score by blur detection and scene stability (OpenCV/ffmpeg, no API cost), pick the sharpest stable frame. Level 2 (future): pass candidates to a vision model alongside section text for semantic relevance scoring.
 - Article format adaptation: should the output format differ for meetings vs. tutorials vs. lectures?
 - Authentication and rate limiting for the public API
 - Whether to support real-time (streaming) progress updates to the user while the job runs
