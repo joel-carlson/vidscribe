@@ -39,9 +39,17 @@ All infrastructure is deployed on **Google Cloud Platform (GCP)**.
 
 ---
 
-## Architecture Diagram
+  
+## Architecture Diagram  
+![Architecture Diagram](Project-diagram.png)      
 
-![Architecture Diagram](Project-diagram.svg)
+
+
+
+
+---  
+
+
 
 ---
 
