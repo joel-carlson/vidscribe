@@ -1,7 +1,6 @@
 # Video-to-Article as a Service
 
 **Author:** Joel Carlson
-**Collaborators:** [Add name here if applicable]
 
 ---
 
@@ -9,7 +8,7 @@
 
 This project builds a cloud-hosted service that accepts any video — a YouTube URL, a Zoom recording, or an uploaded file — and returns a structured, illustrated web article. The output resembles a WikiHow or Medium post: titled sections, paragraph or step-by-step text, and screenshots from the video placed contextually alongside the content.
 
-The core problem being solved is that video is a poor reference format. You cannot skim it, search it, or quickly re-read a specific step. Existing tools (Otter.ai, YouTube captions, Notion AI) produce raw transcripts or bullet summaries — not coherent, illustrated articles. This service bridges that gap.
+The core problem being solved is one that i experience often: that video is a poor reference format. You cannot skim it, search it, or quickly re-read a specific step. Existing tools (Otter.ai, YouTube captions, Notion AI) produce raw transcripts or bullet summaries — not coherent, illustrated articles. This service bridges that gap.
 
 Target users:
 - **Students** who want searchable notes from recorded lectures
