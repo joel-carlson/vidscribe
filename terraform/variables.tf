@@ -15,3 +15,8 @@ variable "gke_num_nodes" {
     type = number
     default = 1
 }
+variable "sql_password" {
+    description = "Password for Cloud SQL instance"
+    type = string
+    sensitive = true
+}

@@ -1,4 +1,4 @@
-resource "google_container_cluster" "primary" {
+resource "google_container_cluster" "vidscribe_gke" {
     name = "vidscribe-cluster"
     location = var.region
     #removing default node pool to create custom one
@@ -16,7 +16,7 @@ resource "google_container_cluster" "primary" {
 resource "google_container_node_pool" "primary_nodes" {
 	name = "vidscribe-node-pool"
 	location = var.region
-    cluster =  google_container_cluster.primary.name
+    cluster =  google_container_cluster.vidscribe_gke.name
     node_count = var.gke_num_nodes 
     autoscaling {
         min_node_count = 1 
