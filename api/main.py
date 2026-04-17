@@ -7,7 +7,7 @@ from models import JobResponse, JobRequest
 from db import Database
 from uuid import UUID
 
-
+#testing at: http://localhost:8000/docs 
 @asynccontextmanager
 async def lifespan(app: FastAPI) :
     """Manage datebase connection pool for app lifetime"""
