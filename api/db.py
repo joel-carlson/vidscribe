@@ -1,12 +1,18 @@
 from typing import Any
 
 import asyncpg
-import config
-from models import JobResponse
 from uuid import UUID
 from fastapi import HTTPException
 from http import HTTPStatus
 from datetime import datetime, timedelta , timezone
+
+
+
+import config
+from pubsub import publish_job
+from models import JobResponse
+
+
 class Database:
     def __init__(self):
         self._pool = None 
@@ -48,6 +54,7 @@ class Database:
                 "INSERT INTO jobs ( video_url) VALUES ($1) RETURNING id, status, created_at",
                 video_url
             )
+            publish_job(video_url, row["id"])
             return JobResponse(
                 job_id = row["id"],
                 status = row["status"],
