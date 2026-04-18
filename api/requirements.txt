@@ -42,6 +42,7 @@ pydantic==2.13.0
 pydantic_core==2.46.0
 Pygments==2.20.0
 pytest==9.0.3
+pytest-asyncio==1.3.0
 python-multipart==0.0.26
 requests==2.33.1
 starlette==1.0.0
@@ -49,4 +50,5 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 urllib3==2.6.3
 uvicorn==0.44.0
+-e git+ssh://git@github.com/joel-carlson/vidscribe.git@a8908a179691c913dd5612d1b8c87c420eab5eba#egg=vidscribe_api&subdirectory=api
 zipp==3.23.1
