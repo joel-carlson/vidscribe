@@ -1,0 +1,11 @@
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    trailing-whitespace,
+    line-too-long,
+    wrong-import-order,
+    bad-indentation
+
+[FORMAT]
+max-line-length=120

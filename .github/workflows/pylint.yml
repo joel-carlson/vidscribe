@@ -20,4 +20,4 @@ jobs:
         pip install -r api/requirements.txt
 
     - name: Lint API
-      run: pylint api/*.py api/worker/*.py --ignore=.venv
+      run: pylint api/*.py api/worker/*.py --ignore=.venv --rcfile=api/.pylintrc
