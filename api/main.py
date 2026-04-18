@@ -35,8 +35,8 @@ def home(request: Request) -> HTMLResponse:
 
 @app.post("/jobs")
 async def receive_jobs(job: JobRequest = Form(default=""), db: Database = Depends(get_db)) -> RedirectResponse:
-    job = await db.create_job(job.video_url)
-    return RedirectResponse(url=f"/status/{job.job_id}", status_code=303)
+    created_job = await db.create_job(job.video_url)
+    return RedirectResponse(url=f"/status/{created_job.job_id}", status_code=303)
 
 
 @app.get("/jobs/{job_id}")
