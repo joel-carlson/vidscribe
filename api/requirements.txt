@@ -49,5 +49,4 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 urllib3==2.6.3
 uvicorn==0.44.0
--e git+ssh://git@github.com/joel-carlson/vidscribe.git@62def3135f67c27da23697b1150906bde3ed406f#egg=vidscribe_api&subdirectory=api
 zipp==3.23.1
