@@ -4,7 +4,7 @@ import asyncpg
 from uuid import UUID
 from fastapi import HTTPException
 from http import HTTPStatus
-from datetime import datetime, timedelta , timezone
+from datetime import datetime, timedelta
 
 
 

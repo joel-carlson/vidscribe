@@ -1,24 +1,23 @@
 #This is the main file that starts the rest API
 from typing import Any
-from fastapi import FastAPI, Request, Depends
 from contextlib import asynccontextmanager
+from uuid import UUID
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
-from uuid import UUID
 
-from models import JobResponse, JobRequest
+from models import JobRequest
 from db import Database
 
 
 
 #testing at: http://localhost:8000/docs 
 @asynccontextmanager
-async def lifespan(app: FastAPI) :
+async def lifespan(fastapi_app: FastAPI):
     """Manage datebase connection pool for app lifetime"""
-    app.state.db = await Database.create()
+    fastapi_app.state.db = await Database.create()
     yield
-    await app.state.db.disconnect()
+    await fastapi_app.state.db.disconnect()
     
     
 app = FastAPI(lifespan=lifespan)
@@ -68,7 +67,7 @@ async def article_page(article_id : UUID, request: Request, db: Database = Depen
 
 
 @app.get("/status/{job_id}", response_class=HTMLResponse)
-async def status_page(request: Request, job_id : UUID, db: Database = Depends(get_db)) -> HTMLResponse:
+async def status_page(request: Request, job_id: UUID) -> HTMLResponse:
     """Render a status page for the given job ID. The page will use JavaScript to poll the /jobs/{job_id} endpoint for status updates and display them to the user. need to coverd the UUID to string."""
     return templates.TemplateResponse(request, "status.html", {"job_id": str(job_id)})
 

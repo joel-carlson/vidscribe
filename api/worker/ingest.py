@@ -1,6 +1,5 @@
 # Downloading the video
-import yt_dlp 
-import os
+import yt_dlp
 
 
 

@@ -2,10 +2,14 @@
 disable=
     missing-module-docstring,
     missing-class-docstring,
+    missing-function-docstring,
     trailing-whitespace,
     line-too-long,
     wrong-import-order,
-    bad-indentation
+    bad-indentation,
+    redefined-outer-name,
+    invalid-name,
+    import-error
 
 [FORMAT]
 max-line-length=120
