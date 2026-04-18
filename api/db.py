@@ -1,5 +1,5 @@
 from typing import Any
-
+import json
 import asyncpg
 from uuid import UUID
 from fastapi import HTTPException
@@ -121,8 +121,7 @@ class Database:
            )
            if row is None:
                raise HTTPException(status_code=HTTPStatus.NOT_FOUND)
-           if row["expires_at"] < datetime.now(timezone.utc):
+           if row["expires_at"] < datetime.utcnow():
                 raise HTTPException(status_code=HTTPStatus.GONE, detail="Article has expired")
-           return row["content"] 
-
+           return json.loads(row["content"])
     
