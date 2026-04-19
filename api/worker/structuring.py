@@ -77,11 +77,11 @@ Accuracy is critical — use only information present in the transcript. Do not 
                               
 
 
-def structure_transcript(youtube_title: str, segments: list[CaptionSegment]) -> Article:
+def structure_transcript(video_title: str, segments: list[CaptionSegment]) -> Article:
     """ Structure the transcript into an article format with sections and subsections.
     
     Args: 
-        youtube_title: The title of the YouTube video, used as a reference for generating the article title.
+        video_title: The title of the video, used as a reference for generating the article title.
         segments: List of caption segments extracted from the video, each with start time, end time, and text.
     
     Returns:
@@ -89,7 +89,7 @@ def structure_transcript(youtube_title: str, segments: list[CaptionSegment]) -> 
     """
     transcript_text = "\n".join(f"[{segment['start']}] {segment['text']}" for segment in segments)
     prompt = PROMPT_TEMPLATE.format(
-        youtube_title=youtube_title,
+        youtube_title=video_title,
         transcript=transcript_text
     )
     response = _client.models.generate_content(

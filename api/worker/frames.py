@@ -1,5 +1,7 @@
 import subprocess
 import os
+
+from models import CaptionSegment
 def extract_frames(video_path: str, time_stamps: list[float], job_id: str) -> list[str]:
     """Extract frames from the video at the specified timestamps and prep for storage.
 
@@ -21,8 +23,6 @@ def extract_frames(video_path: str, time_stamps: list[float], job_id: str) -> li
         frame_paths.append(frame_output_path)
 
     return frame_paths
-#EOF
-
 
 
 
@@ -38,3 +38,6 @@ if __name__ == "__main__":
     print("Extracted frame paths:")
     for path in frame_paths:
         print(path)
+        
+        
+#EOF
