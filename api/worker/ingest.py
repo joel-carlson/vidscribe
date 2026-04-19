@@ -4,6 +4,8 @@ import os
 import re
 from typing import TypedDict
 
+from transcription import transcribe_with_whisper
+
 
 
 def download_video(video_url: str, job_id: str) -> str:
@@ -66,6 +68,9 @@ def timestamp_to_seconds(timestamp: str) -> float:
     hours, minutes, seconds = timestamp.split(":")
     total_seconds = int(hours) * 3600 + int(minutes) * 60 + float(seconds.replace(",", "."))
     return total_seconds
+
+
+
 
 def parse_vtt(caption_path: str) -> list[CaptionSegment]:
     """Parse a VTT caption file into a list of caption segments.                                                                                                                                                                             
@@ -140,7 +145,7 @@ if __name__ == "__main__":
     print(f"Audio downloaded to: {audio_path}")   
     captions = extract_captions(audio_path)                                                                                                                                   
     if captions is None:                   
-        print("No captions found")                                                                                                                                            
+        captions = transcribe_with_whisper(audio_path, language="en")                                                                                                                                       
     else:                         
         print(f"Found {len(captions)} segments")
         for segment in captions[:5]:                                                                                                                                          
