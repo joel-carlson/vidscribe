@@ -7,4 +7,5 @@ GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "local") #Change this when deployin
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "vidscribe-frames")
 GCS_ENDPOINT_URL = os.getenv("GCS_ENDPOINT_URL", "http://localhost:4443")
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://vidscribe:vidscribe_local@localhost:5432/vidscribe")
+PUBSUB_SUBSCRIPTION = os.getenv("PUBSUB_SUBSCRIPTION", "videoscribe-worker-subscription")
 #EOF
