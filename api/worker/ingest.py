@@ -2,7 +2,7 @@
 import yt_dlp
 import os
 import re
-from models import CaptionSegment
+from .models import CaptionSegment
 
 
 

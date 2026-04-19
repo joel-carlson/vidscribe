@@ -1,8 +1,8 @@
 import json
 import redis
 
-import config
-from models import CaptionSegment
+from . import config
+from .models import CaptionSegment
 
 _client = redis.Redis.from_url(config.REDIS_URL, decode_responses=True)
 

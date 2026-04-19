@@ -5,14 +5,14 @@ import json
 
 
 
-from config import PUBSUB_SUBSCRIPTION, GCS_PROJECT_ID
-from ingest import download_video, download_audio, extract_captions
-from cache import cache_transcript
-from assembly import assemble_article
-from transcription import transcribe_with_whisper
-from structuring import structure_transcript
-from frames import extract_frames
-from gcs import upload_frames_to_gcs
+from .config import PUBSUB_SUBSCRIPTION, GCS_PROJECT_ID
+from .ingest import download_video, download_audio, extract_captions
+from .cache import cache_transcript
+from .assembly import assemble_article
+from .transcription import transcribe_with_whisper
+from .structuring import structure_transcript
+from .frames import extract_frames
+from .gcs import upload_frames_to_gcs
 
 
 

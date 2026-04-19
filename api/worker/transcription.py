@@ -1,7 +1,7 @@
 import whisper
 import os
 import torch
-from models import CaptionSegment
+from .models import CaptionSegment
 
 
 

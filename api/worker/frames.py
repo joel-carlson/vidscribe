@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-from models import CaptionSegment
+from .models import CaptionSegment
 def extract_frames(video_path: str, time_stamps: list[float], job_id: str) -> list[str]:
     """Extract frames from the video at the specified timestamps and prep for storage.
 

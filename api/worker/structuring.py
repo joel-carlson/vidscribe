@@ -7,7 +7,7 @@ from google.genai import types
 
 
 
-from models import Article, CaptionSegment
+from .models import Article, CaptionSegment
 
 
 

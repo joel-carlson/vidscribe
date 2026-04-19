@@ -1,8 +1,8 @@
 import asyncpg
 import json
 
-import config
-from models import Article, ArticleSection
+from . import config
+from .models import Article, ArticleSection
 
 
 async def assemble_article(job_id: str, article: Article, frame_urls: list[str])-> None:

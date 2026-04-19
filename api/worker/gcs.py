@@ -1,7 +1,7 @@
 from google.cloud import storage
 from google.auth.credentials import AnonymousCredentials
 
-from config import GCS_BUCKET_NAME, GCS_ENDPOINT_URL, GCS_PUBLIC_URL_BASE, GCS_PROJECT_ID
+from .config import GCS_BUCKET_NAME, GCS_ENDPOINT_URL, GCS_PUBLIC_URL_BASE, GCS_PROJECT_ID
 
 
 _client : storage.Client = storage.Client(credentials=AnonymousCredentials(), project=GCS_PROJECT_ID, client_options={"api_endpoint": GCS_ENDPOINT_URL})
@@ -24,22 +24,41 @@ def upload_frames_to_gcs(frame_paths: list[str], job_id: str) -> list[str]:
     public_urls: list[str] = []
     for frame_path in frame_paths:
         frame_name = frame_path.split("/")[-1]
-        blob = bucket.blob(f"{job_id}/{frame_name}")
+        blob : storage.Blob = bucket.blob(f"{job_id}/{frame_name}")
         blob.upload_from_filename(frame_path)
         public_urls.append(f"{GCS_PUBLIC_URL_BASE}{job_id}/{frame_name}")
         
     
     return public_urls
 
+
+def upload_video_to_gcs(video_path: str, job_id: str) -> str:
+    """Upload the downloaded video to Google Cloud Storage and return its public URL.
+
+    Args:
+        video_path: Local file path to the downloaded video.
+        job_id: Used to organize the video in GCS under a common prefix.
+    Returns:
+        Public URL for the uploaded video.
+    """
+    bucket: storage.Bucket = _client.bucket(GCS_BUCKET_NAME)
+    if not bucket.exists():
+        bucket.create()                                                                                                                
+                         
+    video_name : str = "video.mp4"
+    blob : storage.Blob = bucket.blob(f"{job_id}/{video_name}")
+    blob.upload_from_filename(video_path)
+    return f"gs://{GCS_BUCKET_NAME}/{job_id}/{video_name}"
     
-    
-if __name__ == "__main__":
-    # Example usage requries running the frames.py first to generate the frame files
-    FRAME_PATHS = ["/tmp/example-job-id/frame_10.0.jpg", "/tmp/example-job-id/frame_30.0.jpg", "/tmp/example-job-id/frame_60.0.jpg"]  # These should be the paths to the extracted frames
-    JOB_ID = "example-job-id"
-    
-    print("Uploading frames to GCS...")
+if __name__ == "__main__":                                                                                                                    
+    FRAME_PATHS = ["/tmp/example-job-id/frame_10.0.jpg", "/tmp/example-job-id/frame_30.0.jpg", "/tmp/example-job-id/frame_60.0.jpg"]          
+    JOB_ID = "example-job-id"                                                                                                                 
+                                                                                                                                            
+    print("Uploading frames to GCS...")                                                                                                       
     public_urls = upload_frames_to_gcs(FRAME_PATHS, JOB_ID)
-    print("Public URLs for uploaded frames:")
-    for url in public_urls:
+    for url in public_urls:                                                                                                                   
         print(url)
+                                                                                                                                            
+    print("Uploading video to GCS...")
+    gcs_path = upload_video_to_gcs("/tmp/example-job-id.mp4", JOB_ID)
+    print(f"GCS path: {gcs_path}")  

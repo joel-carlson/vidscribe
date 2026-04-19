@@ -51,7 +51,7 @@ class Database:
         
         async with self._pool.acquire() as conn:
             row  = await conn.fetchrow(
-                "INSERT INTO jobs ( video_url) VALUES ($1) RETURNING id, status, created_at",
+                "INSERT INTO jobs ( video_url, expires_at) VALUES  ($1, NOW() + INTERVAL '1 day')  RETURNING id, status, created_at, expires_at",
                 video_url
             )
             publish_job(video_url, row["id"])
@@ -59,7 +59,7 @@ class Database:
                 job_id = row["id"],
                 status = row["status"],
                 created_at = row["created_at"],
-                expires_at= row["created_at"] + timedelta(hours =1), #epire 1 hour after, temporary
+                expires_at= row["expires_at"], 
                 video_url = video_url
             ) 
             
