@@ -1,5 +1,5 @@
 import subprocess
-
+import os
 def extract_frames(video_path: str, time_stamps: list[float], job_id: str) -> list[str]:
     """Extract frames from the video at the specified timestamps and prep for storage.
 
@@ -12,8 +12,9 @@ def extract_frames(video_path: str, time_stamps: list[float], job_id: str) -> li
         List of local file paths to the extracted frames.
     """
     frame_paths: list[str] = []
+    os.makedirs(f"/tmp/{job_id}", exist_ok=True)
     for time in time_stamps:
-        frame_output_path = f"/tmp/{job_id}_{time}.jpg"
+        frame_output_path = f"/tmp/{job_id}/frame_{time}.jpg"
         subprocess.run(
             ["ffmpeg", "-ss", str(time), "-i", video_path, "-frames:v", "1", "-y", frame_output_path], check=True
         )
