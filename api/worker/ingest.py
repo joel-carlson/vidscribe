@@ -27,7 +27,7 @@ def download_video(video_url: str, job_id: str) -> str:
     return output_path
 
 
-def download_audio(video_url: str, job_id: str) -> str:
+def download_audio(video_url: str, job_id: str) -> tuple[str, str]:
     """Download audio from a video URL to local temp storage.
     
     Args:
@@ -35,7 +35,7 @@ def download_audio(video_url: str, job_id: str) -> str:
         job_id: Used to name the output file uniquely.
     
     Returns:
-        Local file path to the downloaded audio.
+        Tuple of (Local file path to the downloaded audio, Video title).
     """
     output_path = f"/tmp/{job_id}.m4a"
     ydl_opts = {
@@ -45,10 +45,13 @@ def download_audio(video_url: str, job_id: str) -> str:
         "subtitleslangs": ["en"],
         "subtitlesformat": "vtt",
         "outtmpl": output_path,
+
     }
+    title: str = ""
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([video_url])
-    return output_path
+        info = ydl.extract_info(video_url, download=True)
+        title = info.get("title", "")
+    return output_path, title
 
 
 
@@ -137,8 +140,9 @@ if __name__ == "__main__":
     # Example usage
     video_url = "https://www.youtube.com/watch?v=DgXV8QSlI4U"
     job_id = "example-job-id"                                                                                                                                                 
-    audio_path = download_audio(video_url, job_id)                                                                                                                            
+    audio_path, title = download_audio(video_url, job_id)                                                                                                                        
     print(f"Audio downloaded to: {audio_path}")   
+    print(f"Video title: {title}")
     captions = extract_captions(audio_path)                                                                                                                                   
     if captions is None:                   
         captions = transcribe_with_whisper(audio_path, language="en")                                                                                                                                       
