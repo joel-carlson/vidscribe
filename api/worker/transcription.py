@@ -13,11 +13,11 @@ WHISPER_MODEL_SIZE = "small"
 WHISPER_TASK = "transcribe"  
 
 def _get_device() -> str:
-      if torch.backends.mps.is_available():
-          return "mps"
-      if torch.cuda.is_available():                                                                                                                                             
-          return "cuda"
-      return "cpu" 
+    if torch.backends.mps.is_available():
+        return "mps"
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
 
 
 def transcribe_with_whisper(audio_path: str, language: str | None = None) -> list[CaptionSegment]:
