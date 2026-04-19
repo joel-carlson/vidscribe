@@ -33,10 +33,9 @@ def transcribe_with_whisper(audio_path: str, language: str | None = None) -> lis
         A list of CaptionSegment objects
     """    
 
-    model = whisper.load_model(WHISPER_MODEL_SIZE, device=_get_device())
-    # Check audio path first:
     if not os.path.exists(audio_path):
         raise FileNotFoundError(f"Audio file not found at path: {audio_path}")
+    model = whisper.load_model(WHISPER_MODEL_SIZE, device=_get_device())
     result: dict = model.transcribe(audio_path, task=WHISPER_TASK, language=language, verbose=False)
     return [
         CaptionSegment(start=seg["start"], end=seg["end"], text=seg["text"].strip())
