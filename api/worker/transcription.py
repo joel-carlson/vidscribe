@@ -1,7 +1,7 @@
 import whisper
 import os
 import torch
-from ingest import CaptionSegment
+from models import CaptionSegment
 
 
 

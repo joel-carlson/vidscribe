@@ -3,8 +3,7 @@ import yt_dlp
 import os
 import re
 from typing import TypedDict
-
-from transcription import transcribe_with_whisper
+from models import CaptionSegment
 
 
 
@@ -52,10 +51,7 @@ def download_audio(video_url: str, job_id: str) -> str:
     return output_path
 
 
-class CaptionSegment(TypedDict):
-    start: float
-    end: float
-    text: str
+
 
 def timestamp_to_seconds(timestamp: str) -> float:
     """Convert a VTT timestamp (e.g., "00:01:23.456") to total seconds as a float.
