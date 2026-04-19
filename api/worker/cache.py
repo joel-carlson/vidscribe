@@ -53,4 +53,3 @@ if __name__ == "__main__":
     print("Retrieving cached transcript...")
     cached : list[CaptionSegment] | None = get_cached_transcript(test_job_id)
     print("Cached captions:", cached)
-     

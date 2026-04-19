@@ -2,7 +2,6 @@
 import yt_dlp
 import os
 import re
-from typing import TypedDict
 from models import CaptionSegment
 
 
@@ -137,17 +136,20 @@ def extract_captions(audio_path: str) -> list[CaptionSegment]| None:
 
 
 if __name__ == "__main__":
+    from transcription import transcribe_with_whisper
     # Example usage
-    video_url = "https://www.youtube.com/watch?v=DgXV8QSlI4U"
-    job_id = "example-job-id"                                                                                                                                                 
-    audio_path, title = download_audio(video_url, job_id)                                                                                                                        
-    print(f"Audio downloaded to: {audio_path}")   
+    VIDEO_URL = "https://www.youtube.com/watch?v=DgXV8QSlI4U"
+    JOB_ID = "example-job-id"
+    audio_path, title = download_audio(VIDEO_URL, JOB_ID)
+    print(f"Audio downloaded to: {audio_path}")
     print(f"Video title: {title}")
-    captions = extract_captions(audio_path)                                                                                                                                   
-    if captions is None:                   
-        captions = transcribe_with_whisper(audio_path, language="en")                                                                                                                                       
+    captions = extract_captions(audio_path)
+    video_path: str = download_video(VIDEO_URL, JOB_ID)
+    print(f"Video downloaded to: {video_path}")
+    if captions is None:
+        captions = transcribe_with_whisper(audio_path, language="en")
     else:                         
         print(f"Found {len(captions)} segments")
-        for segment in captions[:5]:                                                                                                                                          
-            print(segment)  
-
+        for segment in captions[:5]:
+            print(segment)
+#EOF
