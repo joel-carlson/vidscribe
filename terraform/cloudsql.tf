@@ -27,6 +27,11 @@ resource "google_sql_database_instance" "vidscribe_sql_instance" {
     depends_on = [google_service_networking_connection.vidscribe_sql_connection]
 }
 
+resource "google_sql_database" "vidscribe_db" {
+    name     = "vidscribe"
+    instance = google_sql_database_instance.vidscribe_sql_instance.name
+}
+
 resource "google_sql_user" "vidscribe_sql_user" {
     name = "vidscribe-user"
     instance = google_sql_database_instance.vidscribe_sql_instance.name

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vidscribe-config
+data:
+  DATABASE_URL: "postgresql://vidscribe-user:c4Z%Spvo4-vp?@6@/vidscribe?host=/cloudsql/vidscribe-491820:us-central1:vidscribe-sql-instance"
+  PUBSUB_PROJECT_ID: "vidscribe-491820"
+  PUBSUB_TOPIC: "vidscribe-topic"
+  PUBSUB_SUBSCRIPTION: "vidscribe-subscription"
+  GCS_BUCKET_NAME: "vidscribe-bucket"
+  GCS_PROJECT_ID: "vidscribe-491820"
+  REDIS_URL: "redis://REDIS_HOST_PLACEHOLDER:6379"
+  GOOGLE_CLOUD_REGION: "us-central1"

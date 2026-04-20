@@ -17,8 +17,14 @@ REGION = "us-central1"
 MODEL_ID = "gemini-2.5-flash-lite"
 
 LOCATION = os.environ.get("GOOGLE_CLOUD_REGION", REGION)
-# Project initialization:
-_client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+
+_client: genai.Client | None = None
+
+def _get_client() -> genai.Client:
+    global _client
+    if _client is None:
+        _client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+    return _client
 
 
 RESPONSE_SCHEMA: dict = {
@@ -92,7 +98,7 @@ def structure_transcript(video_title: str, segments: list[CaptionSegment]) -> Ar
         youtube_title=video_title,
         transcript=transcript_text
     )
-    response = _client.models.generate_content(
+    response = _get_client().models.generate_content(
         model=MODEL_ID,
         contents=prompt,
         config= types.GenerateContentConfig(

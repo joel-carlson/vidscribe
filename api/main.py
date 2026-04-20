@@ -4,7 +4,7 @@ from typing import Any
 from contextlib import asynccontextmanager
 from uuid import UUID
 import uuid
-from fastapi import FastAPI, File, Request, Depends, Form, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, Depends, Form, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from worker.gcs import upload_video_to_gcs
@@ -55,8 +55,13 @@ async def receive_jobs(
         video_url = gcs_path
         os.unlink(temp_file_path)  # Clean up the temp file
         created_job = await db.create_job_with_id(video_url, job_id)
-    else:    
-        created_job = await db.create_job(video_url)
+    else:
+        try:
+            created_job = await db.create_job(video_url)
+        except HTTPException as e:
+            if e.status_code == 303:
+                return RedirectResponse(url=e.headers["Location"], status_code=303)
+            raise
     if created_job is None:  
         return templates.TemplateResponse(request, "submit.html", {"error": "Provide a URL or upload a file."}, status_code=400)
     return RedirectResponse(url=f"/status/{created_job.job_id}", status_code=303)

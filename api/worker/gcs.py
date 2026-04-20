@@ -4,7 +4,13 @@ from google.auth.credentials import AnonymousCredentials
 from .config import GCS_BUCKET_NAME, GCS_ENDPOINT_URL, GCS_PUBLIC_URL_BASE, GCS_PROJECT_ID
 
 
-_client : storage.Client = storage.Client(credentials=AnonymousCredentials(), project=GCS_PROJECT_ID, client_options={"api_endpoint": GCS_ENDPOINT_URL})
+_client: storage.Client | None = None
+
+def _get_client() -> storage.Client:
+    global _client
+    if _client is None:
+        _client = storage.Client(credentials=AnonymousCredentials(), project=GCS_PROJECT_ID, client_options={"api_endpoint": GCS_ENDPOINT_URL})
+    return _client
 
 def upload_frames_to_gcs(frame_paths: list[str], job_id: str) -> list[str]:
     """Upload extracted frames to Google Cloud Storage and return their public URLs.
@@ -17,7 +23,7 @@ def upload_frames_to_gcs(frame_paths: list[str], job_id: str) -> list[str]:
         List of public URLs for the uploaded frames.
     """
     # Get bucket from the client
-    bucket: storage.Bucket = _client.bucket(GCS_BUCKET_NAME)
+    bucket: storage.Bucket = _get_client().bucket(GCS_BUCKET_NAME)
     if not bucket.exists():
         bucket.create()                                                                                                                
                          
@@ -41,7 +47,7 @@ def upload_video_to_gcs(video_path: str, job_id: str) -> str:
     Returns:
         Public URL for the uploaded video.
     """
-    bucket: storage.Bucket = _client.bucket(GCS_BUCKET_NAME)
+    bucket: storage.Bucket = _get_client().bucket(GCS_BUCKET_NAME)
     if not bucket.exists():
         bucket.create()                                                                                                                
                          
@@ -61,7 +67,7 @@ def download_from_gcs(gcs_path: str, local_path: str)-> None:
     Returns:
         Local file path to the downloaded file.
     """
-    bucket : storage.Bucket = _client.bucket(GCS_BUCKET_NAME)
+    bucket : storage.Bucket = _get_client().bucket(GCS_BUCKET_NAME)
     blob_name : str = "/".join(gcs_path.split("/")[3:])  # This gets the job id from the gcs path and strips the gs://bucket/
     bucket.blob(blob_name).download_to_filename(local_path)
         

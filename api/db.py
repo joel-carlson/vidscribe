@@ -39,7 +39,7 @@ class Database:
             
     async def create_job(self, video_url: str) -> JobResponse:
         """
-        Insert a new job record and return its initial state.
+        Insert a new job record and return its initial state while also checking if the vidoe url has already been processed.
                                                                                                                                                                                                                                             
         Args:                                                                                                                                                                                                                             
             video_url: URL of the video to process.
@@ -50,6 +50,16 @@ class Database:
         
         
         async with self._pool.acquire() as conn:
+            existing = await conn.fetchrow(
+              """SELECT a.id FROM articles a
+                 JOIN jobs j ON a.job_id = j.id
+                 WHERE j.video_url = $1
+                 AND a.expires_at > NOW()
+                 ORDER BY a.created_at DESC LIMIT 1""",
+              video_url
+            )
+            if existing:
+                raise HTTPException(status_code=303, headers={"Location": f"/article/{existing['id']}"})
             row  = await conn.fetchrow(
                 "INSERT INTO jobs ( video_url, expires_at) VALUES  ($1, NOW() + INTERVAL '1 day')  RETURNING id, status, created_at, expires_at",
                 video_url
