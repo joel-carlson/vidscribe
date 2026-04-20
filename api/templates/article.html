@@ -25,16 +25,16 @@
     {% if article.get("sections") %}
         {% for section in article["sections"] %}
         <div class="section">
-            {% if section.get("heading") %}
-            <h2>{{ section["heading"] }}</h2>
+            {% if section.get("title") %}
+            <h2>{{ section["title"] }}</h2>
             {% endif %}
 
-            {% if section.get("image_url") %}
-            <img src="{{ section['image_url'] }}" alt="{{ section.get('heading', 'Section image') }}">
+            {% if section.get("frame_url") %}
+            <img src="{{ section['frame_url'] }}" alt="{{ section.get('title', 'Section image') }}">
             {% endif %}
 
-            {% if section.get("text") %}
-            <p>{{ section["text"] }}</p>
+            {% if section.get("body") %}
+            <p>{{ section["body"] }}</p>
             {% endif %}
         </div>
         {% endfor %}

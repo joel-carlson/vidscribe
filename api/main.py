@@ -1,14 +1,17 @@
 #This is the main file that starts the rest API
+import os
 from typing import Any
 from contextlib import asynccontextmanager
 from uuid import UUID
-from fastapi import FastAPI, Request, Depends, Form
+import uuid
+from fastapi import FastAPI, File, HTTPException, Request, Depends, Form, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
+from worker.gcs import upload_video_to_gcs
 
-from models import JobRequest
+from models import JobRequest, JobResponse
 from db import Database
-
+from worker.gcs import upload_video_to_gcs
 
 
 #testing at: http://localhost:8000/docs 
@@ -34,10 +37,36 @@ def home(request: Request) -> HTMLResponse:
 
 
 @app.post("/jobs")
-async def receive_jobs(job: JobRequest = Form(default=""), db: Database = Depends(get_db)) -> RedirectResponse:
-    created_job = await db.create_job(job.video_url)
+async def receive_jobs(
+    request: Request,
+    video_url: str = Form(default=""),
+    file: UploadFile | None = File(default=None),
+    db: Database = Depends(get_db)
+) -> RedirectResponse:
+    created_job : JobResponse | None = None
+    if file and file.filename:
+        # Save to temp file
+        temp_file_path : str = f"/tmp/{file.filename}"
+        with open(temp_file_path, "wb") as buffer:
+            while chunk := await file.read(1024 * 1024):
+                buffer.write(chunk)
+        job_id : uuid.UUID = uuid.uuid4()
+        try:
+            gcs_path = upload_video_to_gcs(temp_file_path, str(job_id))
+            video_url = gcs_path
+        finally:
+            os.unlink(temp_file_path)
+        created_job = await db.create_job_with_id(video_url, job_id)
+    elif video_url:
+        try:
+            created_job = await db.create_job(video_url)
+        except HTTPException as e:
+            if e.status_code == 303:
+                return RedirectResponse(url=e.headers["Location"], status_code=303)
+            raise
+    if created_job is None:  
+        return templates.TemplateResponse(request, "submit.html", {"error": "Provide a URL or upload a file."}, status_code=400)
     return RedirectResponse(url=f"/status/{created_job.job_id}", status_code=303)
-
 
 @app.get("/jobs/{job_id}")
 async def return_job_status(job_id : UUID, db: Database = Depends(get_db)) ->str:

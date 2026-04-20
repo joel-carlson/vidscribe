@@ -22,8 +22,8 @@
     <div class="card">
         {% if error %}<p class="error">{{ error }}</p>{% endif %}
         <form method="post" action="/jobs" enctype="multipart/form-data">
-            <label for="video_url">YouTube URL</label>
-            <input type="text" id="video_url" name="video_url" placeholder="https://www.youtube.com/watch?v=...">
+            <label for="video_url">Video URL</label>
+            <input type="text" id="video_url" name="video_url" placeholder="EX: https://www.youtube.com...">
             <div class="divider">— or —</div>
             <label for="file">Upload Video File</label>
             <input type="file" id="file" name="file" accept="video/*">

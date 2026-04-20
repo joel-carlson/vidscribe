@@ -2,7 +2,22 @@
 import yt_dlp
 import os
 import re
-from typing import TypedDict
+from .models import CaptionSegment
+from .gcs import download_from_gcs
+
+
+def _download_from_gcs(gcs_path: str, job_id: str) -> str:
+    """Download the video from GCS to local temp storage. This is used when the input video URL is a GCS path instead of a video link.
+    Args:
+        gcs_path: GCS path in the format "gs://bucket_name/path/to/video".
+        job_id: Used to name the output file uniquely.
+    Returns:
+        Local file path to the downloaded video.
+    """
+    local_path = f"/tmp/{job_id}.mp4"
+    download_from_gcs(gcs_path, local_path)
+    return local_path
+
 
 
 
@@ -17,16 +32,20 @@ def download_video(video_url: str, job_id: str) -> str:
         Local file path to the downloaded video.                                                                                                                              
     """
     output_path = f"/tmp/{job_id}.mp4"
-    ydl_opts = {
-        "format": "bestvideo[ext=mp4]/best[ext=mp4]",
-        "outtmpl": output_path,
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([video_url])
+    # Finding if the video_url is a GCS path and downloading from GCS
+    if video_url.startswith("gs://"):
+        return _download_from_gcs(video_url, job_id)
+    else:
+        ydl_opts = {
+            "format": "bestvideo[ext=mp4]/best[ext=mp4]",
+            "outtmpl": output_path,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([video_url])
     return output_path
 
 
-def download_audio(video_url: str, job_id: str) -> str:
+def download_audio(video_url: str, job_id: str) -> tuple[str, str]:
     """Download audio from a video URL to local temp storage.
     
     Args:
@@ -34,7 +53,7 @@ def download_audio(video_url: str, job_id: str) -> str:
         job_id: Used to name the output file uniquely.
     
     Returns:
-        Local file path to the downloaded audio.
+        Tuple of (Local file path to the downloaded audio, Video title).
     """
     output_path = f"/tmp/{job_id}.m4a"
     ydl_opts = {
@@ -44,16 +63,16 @@ def download_audio(video_url: str, job_id: str) -> str:
         "subtitleslangs": ["en"],
         "subtitlesformat": "vtt",
         "outtmpl": output_path,
+
     }
+    title: str = ""
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([video_url])
-    return output_path
+        info = ydl.extract_info(video_url, download=True)
+        title = info.get("title", "")
+    return output_path, title
 
 
-class CaptionSegment(TypedDict):
-    start: float
-    end: float
-    text: str
+
 
 def timestamp_to_seconds(timestamp: str) -> float:
     """Convert a VTT timestamp (e.g., "00:01:23.456") to total seconds as a float.
@@ -66,6 +85,9 @@ def timestamp_to_seconds(timestamp: str) -> float:
     hours, minutes, seconds = timestamp.split(":")
     total_seconds = int(hours) * 3600 + int(minutes) * 60 + float(seconds.replace(",", "."))
     return total_seconds
+
+
+
 
 def parse_vtt(caption_path: str) -> list[CaptionSegment]:
     """Parse a VTT caption file into a list of caption segments.                                                                                                                                                                             
@@ -133,16 +155,25 @@ def extract_captions(audio_path: str) -> list[CaptionSegment]| None:
 
 
 if __name__ == "__main__":
+    from .transcription import transcribe_with_whisper
     # Example usage
-    video_url = "https://www.youtube.com/watch?v=DgXV8QSlI4U"
-    job_id = "example-job-id"                                                                                                                                                 
-    audio_path = download_audio(video_url, job_id)                                                                                                                            
-    print(f"Audio downloaded to: {audio_path}")   
-    captions = extract_captions(audio_path)                                                                                                                                   
-    if captions is None:                   
-        print("No captions found")                                                                                                                                            
+    VIDEO_URL = "https://www.youtube.com/watch?v=DgXV8QSlI4U"
+    JOB_ID = "example-job-id"
+    audio_path, title = download_audio(VIDEO_URL, JOB_ID)
+    print(f"Audio downloaded to: {audio_path}")
+    print(f"Video title: {title}")
+    captions = extract_captions(audio_path)
+    video_path: str = download_video(VIDEO_URL, JOB_ID)
+    print(f"Video downloaded to: {video_path}")
+    if captions is None:
+        captions = transcribe_with_whisper(audio_path, language="en")
     else:                         
         print(f"Found {len(captions)} segments")
-        for segment in captions[:5]:                                                                                                                                          
-            print(segment)  
-
+        for segment in captions[:5]:
+            print(segment)
+    #GCS download test
+    GCS_PATH = "gs://vidscribe-frames/example-job-id/video.mp4"                                                                        
+    print("Testing GCS download...")                                                                                                   
+    gcs_video_path = download_video(GCS_PATH, "example-job-id-gcs")                                                                    
+    print(f"GCS video downloaded to: {gcs_video_path}")    
+#EOF

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vidscribe-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vidscribe-api
+  template:
+    metadata:
+      labels:
+        app: vidscribe-api
+    spec:
+      serviceAccountName: vidscribe-ksa
+      containers:
+        - name: api
+          image: us-central1-docker.pkg.dev/vidscribe-491820/vidscribe/api:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: vidscribe-config
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
+          args:
+            - "--structured-logs"
+            - "--port=5432"
+            - "vidscribe-491820:us-central1:vidscribe-sql-instance"
+          securityContext:
+            runAsNonRoot: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vidscribe-api-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: vidscribe-api
+  ports:
+    - port: 80
+      targetPort: 8000
