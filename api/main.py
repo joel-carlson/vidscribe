@@ -9,9 +9,9 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from worker.gcs import upload_video_to_gcs
 
-from .models import JobRequest, JobResponse
-from .db import Database, create_job, create_job_with_id
-from .worker.gcs import upload_video_to_gcs
+from models import JobRequest, JobResponse
+from db import Database
+from worker.gcs import upload_video_to_gcs
 
 
 #testing at: http://localhost:8000/docs 
@@ -44,7 +44,7 @@ async def receive_jobs(
     db: Database = Depends(get_db)
 ) -> RedirectResponse:
     created_job : JobResponse | None = None
-    if(file is not None):
+    if file and file.filename:
         # Save to temp file
         temp_file_path : str = f"/tmp/{file.filename}"
         with open(temp_file_path, "wb") as buffer:

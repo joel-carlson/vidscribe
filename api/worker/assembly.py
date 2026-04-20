@@ -21,7 +21,7 @@ async def assemble_article(job_id: str, article: Article, frame_urls: list[str])
         
     conn : asyncpg.Connection = await asyncpg.connect(config.DATABASE_URL)
     await conn.execute(
-        "INSERT INTO articles (job_id, title, content) VALUES ($1, $2, $3)",
+        "INSERT INTO articles (job_id, title, content, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '1 day')",
         job_id,
         article["title"],
         json.dumps(article)

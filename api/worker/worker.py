@@ -89,6 +89,4 @@ def listen() ->None:
 
 
 if __name__ == "__main__":
-    VIDEO_URL = "https://www.youtube.com/watch?v=DgXV8QSlI4U"
-    JOB_ID = "example-job-id"
-    asyncio.run(process_job(VIDEO_URL, JOB_ID))
+    listen()

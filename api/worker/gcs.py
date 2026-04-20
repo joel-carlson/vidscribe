@@ -26,7 +26,7 @@ def upload_frames_to_gcs(frame_paths: list[str], job_id: str) -> list[str]:
         frame_name = frame_path.split("/")[-1]
         blob : storage.Blob = bucket.blob(f"{job_id}/{frame_name}")
         blob.upload_from_filename(frame_path)
-        public_urls.append(f"{GCS_PUBLIC_URL_BASE}{job_id}/{frame_name}")
+        public_urls.append(f"http://localhost:4443/download/storage/v1/b/{GCS_BUCKET_NAME}/o/{job_id}%2F{frame_name}?alt=media")
         
     
     return public_urls
