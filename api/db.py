@@ -62,7 +62,33 @@ class Database:
                 expires_at= row["expires_at"], 
                 video_url = video_url
             ) 
-            
+    async def create_job_with_id(self, video_url: str, job_id : UUID) -> JobResponse:
+        """
+        Insert a new job record with a specified ID and return its initial state.
+                                                                                                                                                                                                                                            
+        Args:                                                                                                                                                                                                                             
+            video_url: URL of the video to process.
+            job_id: UUID to assign to the new job.
+                                                                                                                                                                                                                                            
+        Returns:        
+            JobResponse containing the new job's id, status, and created_at.
+        """      
+        
+        
+        async with self._pool.acquire() as conn:
+            row  = await conn.fetchrow(
+                "INSERT INTO jobs (id, video_url, expires_at) VALUES  ($1, $2, NOW() + INTERVAL '1 day')  RETURNING id, status, created_at, expires_at",
+                job_id,
+                video_url
+            )
+            publish_job(video_url, job_id)
+            return JobResponse(
+                job_id = row["id"],
+                status = row["status"],
+                created_at = row["created_at"],
+                expires_at= row["expires_at"], 
+                video_url = video_url
+            )
     # Give Job ID, return status. Status endpoint
     async def get_job_status(self, job_id : UUID) -> str:
         """ Fetch the current processing status for a job.                                                                                                                                                                             
