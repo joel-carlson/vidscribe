@@ -3,6 +3,21 @@ import yt_dlp
 import os
 import re
 from .models import CaptionSegment
+from .gcs import download_from_gcs
+
+
+def _download_from_gcs(gcs_path: str, job_id: str) -> str:
+    """Download the video from GCS to local temp storage. This is used when the input video URL is a GCS path instead of a video link.
+    Args:
+        gcs_path: GCS path in the format "gs://bucket_name/path/to/video".
+        job_id: Used to name the output file uniquely.
+    Returns:
+        Local file path to the downloaded video.
+    """
+    local_path = f"/tmp/{job_id}.mp4"
+    download_from_gcs(gcs_path, local_path)
+    return local_path
+
 
 
 
@@ -17,12 +32,16 @@ def download_video(video_url: str, job_id: str) -> str:
         Local file path to the downloaded video.                                                                                                                              
     """
     output_path = f"/tmp/{job_id}.mp4"
-    ydl_opts = {
-        "format": "bestvideo[ext=mp4]/best[ext=mp4]",
-        "outtmpl": output_path,
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([video_url])
+    # Finding if the video_url is a GCS path and downloading from GCS
+    if video_url.startswith("gs://"):
+        return _download_from_gcs(video_url, job_id)
+    else:
+        ydl_opts = {
+            "format": "bestvideo[ext=mp4]/best[ext=mp4]",
+            "outtmpl": output_path,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([video_url])
     return output_path
 
 
@@ -136,7 +155,7 @@ def extract_captions(audio_path: str) -> list[CaptionSegment]| None:
 
 
 if __name__ == "__main__":
-    from transcription import transcribe_with_whisper
+    from .transcription import transcribe_with_whisper
     # Example usage
     VIDEO_URL = "https://www.youtube.com/watch?v=DgXV8QSlI4U"
     JOB_ID = "example-job-id"
@@ -152,4 +171,9 @@ if __name__ == "__main__":
         print(f"Found {len(captions)} segments")
         for segment in captions[:5]:
             print(segment)
+    #GCS download test
+    GCS_PATH = "gs://vidscribe-frames/example-job-id/video.mp4"                                                                        
+    print("Testing GCS download...")                                                                                                   
+    gcs_video_path = download_video(GCS_PATH, "example-job-id-gcs")                                                                    
+    print(f"GCS video downloaded to: {gcs_video_path}")    
 #EOF
