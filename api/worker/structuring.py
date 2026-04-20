@@ -119,7 +119,7 @@ def structure_transcript(video_title: str, segments: list[CaptionSegment]) -> Ar
     
     
 if __name__ == "__main__":                                                                
-    from ingest import extract_captions
+    from .ingest import extract_captions
                                                                                         
     audio_path = "/tmp/example-job-id.m4a"
     youtube_title = "AI Technical Debt"                                                   
