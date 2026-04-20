@@ -10,7 +10,9 @@ from .models import CaptionSegment
 
 
 WHISPER_MODEL_SIZE = "small"
-WHISPER_TASK = "transcribe"  
+WHISPER_TASK = "transcribe"
+
+_model: "whisper.Whisper | None" = None
 
 def _get_device() -> str:
     if torch.backends.mps.is_available():
@@ -35,8 +37,10 @@ def transcribe_with_whisper(audio_path: str, language: str | None = None) -> lis
 
     if not os.path.exists(audio_path):
         raise FileNotFoundError(f"Audio file not found at path: {audio_path}")
-    model = whisper.load_model(WHISPER_MODEL_SIZE, device=_get_device())
-    result: dict = model.transcribe(audio_path, task=WHISPER_TASK, language=language, verbose=False)
+    global _model
+    if _model is None:
+        _model = whisper.load_model(WHISPER_MODEL_SIZE, device=_get_device())
+    result: dict = _model.transcribe(audio_path, task=WHISPER_TASK, language=language, verbose=False)
     return [
         CaptionSegment(start=seg["start"], end=seg["end"], text=seg["text"].strip())
         for seg in result["segments"]

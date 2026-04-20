@@ -13,23 +13,28 @@ async def assemble_article(job_id: str, article: Article, frame_urls: list[str])
         article: The structured article content generated from the video transcript, containing a title and a list of sections with their respective subsections.
         frame_urls: List of public URLs for the extracted frames that correspond to key moments in the video, which will be integrated into the article to enhance its visual appeal and provide context to the readers.
     """
-    # Adding the frame URLS to tthe corresponding sections/subsections based on timestamps 
-    for section, frame_url in zip(article["sections"], frame_urls):
-        # This is done becasue the sections are ordered by their timestamps, so it is an exact match.
+    if len(frame_urls) != len(article["sections"]):
+        print(f"Warning: {len(frame_urls)} frame URLs for {len(article['sections'])} sections — some sections will have no image")
+    for section, frame_url in zip(article["sections"], frame_urls + [None] * len(article["sections"])):
         section["frame_url"] = frame_url
         
         
-    conn : asyncpg.Connection = await asyncpg.connect(config.DATABASE_URL)
-    await conn.execute(
-        "INSERT INTO articles (job_id, title, content, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '1 day')",
-        job_id,
-        article["title"],
-        json.dumps(article)
-    )
-    await conn.execute(
-        "UPDATE jobs SET status = 'completed' WHERE id = $1",
-        job_id
-    )
+    conn: asyncpg.Connection | None = None
+    try:
+        conn = await asyncpg.connect(config.DATABASE_URL)
+        await conn.execute(
+            "INSERT INTO articles (job_id, title, content, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '1 day')",
+            job_id,
+            article["title"],
+            json.dumps(article)
+        )
+        await conn.execute(
+            "UPDATE jobs SET status = 'completed' WHERE id = $1",
+            job_id
+        )
+    finally:
+        if conn is not None:
+            await conn.close()
           
           
           

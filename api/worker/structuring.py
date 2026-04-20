@@ -12,10 +12,9 @@ from .models import Article, CaptionSegment
 
 
 # Constants
-PROJECT_ID = "vidscribe-491820"                                                           
-REGION = "us-central1"         
-MODEL_ID = "gemini-2.5-flash-lite"
-
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "vidscribe-491820")
+REGION = "us-central1"
+MODEL_ID = os.environ.get("VERTEX_MODEL_ID", "gemini-2.5-flash-lite")
 LOCATION = os.environ.get("GOOGLE_CLOUD_REGION", REGION)
 
 _client: genai.Client | None = None

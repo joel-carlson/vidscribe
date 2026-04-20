@@ -48,14 +48,16 @@ async def receive_jobs(
         # Save to temp file
         temp_file_path : str = f"/tmp/{file.filename}"
         with open(temp_file_path, "wb") as buffer:
-            buffer.write(await file.read())
-        #Upload the file to GCS and get the public URL
+            while chunk := await file.read(1024 * 1024):
+                buffer.write(chunk)
         job_id : uuid.UUID = uuid.uuid4()
-        gcs_path = upload_video_to_gcs(temp_file_path, str(job_id))
-        video_url = gcs_path
-        os.unlink(temp_file_path)  # Clean up the temp file
+        try:
+            gcs_path = upload_video_to_gcs(temp_file_path, str(job_id))
+            video_url = gcs_path
+        finally:
+            os.unlink(temp_file_path)
         created_job = await db.create_job_with_id(video_url, job_id)
-    else:
+    elif video_url:
         try:
             created_job = await db.create_job(video_url)
         except HTTPException as e:

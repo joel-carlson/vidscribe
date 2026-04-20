@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-from .models import CaptionSegment
+
 def extract_frames(video_path: str, time_stamps: list[float], job_id: str) -> list[str]:
     """Extract frames from the video at the specified timestamps and prep for storage.
 
@@ -18,7 +18,7 @@ def extract_frames(video_path: str, time_stamps: list[float], job_id: str) -> li
     for time in time_stamps:
         frame_output_path = f"/tmp/{job_id}/frame_{time}.jpg"
         subprocess.run(
-            ["ffmpeg", "-ss", str(time), "-i", video_path, "-frames:v", "1", "-y", frame_output_path], check=True
+            ["ffmpeg", "-ss", str(time), "-i", video_path, "-frames:v", "1", "-update", "1", "-y", frame_output_path], check=True
         )
         frame_paths.append(frame_output_path)
 

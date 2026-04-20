@@ -9,8 +9,22 @@ _client: storage.Client | None = None
 def _get_client() -> storage.Client:
     global _client
     if _client is None:
-        _client = storage.Client(credentials=AnonymousCredentials(), project=GCS_PROJECT_ID, client_options={"api_endpoint": GCS_ENDPOINT_URL})
+        if GCS_ENDPOINT_URL:
+            # Local emulator — anonymous credentials, custom endpoint
+            _client = storage.Client(
+                credentials=AnonymousCredentials(),
+                project=GCS_PROJECT_ID,
+                client_options={"api_endpoint": GCS_ENDPOINT_URL}
+            )
+        else:
+            # Production — use workload identity / application default credentials
+            _client = storage.Client(project=GCS_PROJECT_ID)
     return _client
+
+
+def _ensure_bucket(bucket: storage.Bucket) -> None:
+    if GCS_ENDPOINT_URL and not bucket.exists():
+        bucket.create()
 
 def upload_frames_to_gcs(frame_paths: list[str], job_id: str) -> list[str]:
     """Upload extracted frames to Google Cloud Storage and return their public URLs.
@@ -24,15 +38,17 @@ def upload_frames_to_gcs(frame_paths: list[str], job_id: str) -> list[str]:
     """
     # Get bucket from the client
     bucket: storage.Bucket = _get_client().bucket(GCS_BUCKET_NAME)
-    if not bucket.exists():
-        bucket.create()                                                                                                                
+    _ensure_bucket(bucket)
                          
     public_urls: list[str] = []
     for frame_path in frame_paths:
         frame_name = frame_path.split("/")[-1]
         blob : storage.Blob = bucket.blob(f"{job_id}/{frame_name}")
         blob.upload_from_filename(frame_path)
-        public_urls.append(f"http://localhost:4443/download/storage/v1/b/{GCS_BUCKET_NAME}/o/{job_id}%2F{frame_name}?alt=media")
+        if GCS_ENDPOINT_URL:
+            public_urls.append(f"{GCS_ENDPOINT_URL}/download/storage/v1/b/{GCS_BUCKET_NAME}/o/{job_id}%2F{frame_name}?alt=media")
+        else:
+            public_urls.append(f"https://storage.googleapis.com/{GCS_BUCKET_NAME}/{job_id}/{frame_name}")
         
     
     return public_urls
@@ -48,8 +64,7 @@ def upload_video_to_gcs(video_path: str, job_id: str) -> str:
         Public URL for the uploaded video.
     """
     bucket: storage.Bucket = _get_client().bucket(GCS_BUCKET_NAME)
-    if not bucket.exists():
-        bucket.create()                                                                                                                
+    _ensure_bucket(bucket)
                          
     video_name : str = "video.mp4"
     blob : storage.Blob = bucket.blob(f"{job_id}/{video_name}")
