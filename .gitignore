@@ -28,6 +28,9 @@ build/
 .env
 .env.*
 
+# Kubernetes secrets (never commit — create via kubectl)
+k8s/secret.yaml
+
 # IDE
 .vscode/
 .idea/
