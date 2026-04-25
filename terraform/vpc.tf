@@ -17,4 +17,7 @@ resource "google_compute_subnetwork" "vpc_subnetwork" {
         range_name = "services"
         ip_cidr_range = "10.52.0.0/20"
     }
+    lifecycle {
+        ignore_changes = [secondary_ip_range]
+    }
 }
